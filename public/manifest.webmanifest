@@ -1,0 +1,24 @@
+{
+  "id": "/",
+  "name": "مُنظِّم — جدولك اليومي",
+  "short_name": "مُنظِّم",
+  "description": "نظّم وقت الدراسة والعمل والأسرة مع تذكيرات تلقائية على واتساب والإيميل",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F5F6FA",
+  "theme_color": "#3D4FD8",
+  "categories": ["productivity", "education", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "مهمة جديدة", "short_name": "جديد", "url": "/#new", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "الأسبوع", "short_name": "الأسبوع", "url": "/#week", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
