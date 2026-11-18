@@ -341,7 +341,9 @@ const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); retu
 const todayStr = () => ymd(new Date());
 const weekStart = d => { const x = new Date(d.getFullYear(),d.getMonth(),d.getDate()); const diff = (x.getDay()-WEEK_START+7)%7; return addDays(x,-diff); };
 const fmtLong = d => `${DAYS[d.getDay()]}، ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-const fmtTime = t => { if(!t) return ""; let [h,m] = t.split(":").map(Number); const s = h<12?"ص":"م"; h = h%12||12; return `${h}:${pad(m)} ${s}`; };
+const fmtTime = t => { if(!t) return ""; let [h,m] = t.split(":").map(Number);
+  if(h===0 && m===0) return "12:00 منتصف الليل"; if(h===12 && m===0) return "12:00 ظهراً";
+  const s = h<12?"ص":"م"; h = h%12||12; return `${h}:${pad(m)} ${s}`; };
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
 
@@ -460,7 +462,7 @@ function toggleDone(id, ds){
   if(t.done[ds]) delete t.done[ds]; else t.done[ds] = true;
   save(); render();
 }
-const durationH = t => { if(!t.start||!t.end) return 0; const [a,b]=t.start.split(":").map(Number),[c,d]=t.end.split(":").map(Number); return Math.max(0,((c*60+d)-(a*60+b))/60); };
+const durationH = t => { if(!t.start||!t.end) return 0; const [a,b]=t.start.split(":").map(Number),[c,d]=t.end.split(":").map(Number); let diff = (c*60+d)-(a*60+b); if(diff<0) diff += 1440; return diff/60; };
 
 /* ========== Messages (WhatsApp / Email) ========== */
 function summaryText(ds){
@@ -728,6 +730,7 @@ function drawTaskModal(){
       <div class="field"><label>من</label><input type="time" name="start" value="${f.start}"></div>
       <div class="field"><label>إلى</label><input type="time" name="end" value="${f.end}"></div>
     </div>
+    <p class="err" id="timeWarn" style="margin-top:-6px"></p>
     <div class="row2">
       <div class="field"><label>الأولوية</label><select name="pri">${Object.entries(PRI).map(([k,v])=>`<option value="${k}" ${f.pri===k?"selected":""}>${v}</option>`).join("")}</select></div>
       <div class="field"><label>التذكير</label><select name="remind">${[[-1,"بدون تذكير"],[0,"عند الموعد"],[5,"قبل 5 دقائق"],[10,"قبل 10 دقائق"],[15,"قبل 15 دقيقة"],[30,"قبل 30 دقيقة"],[60,"قبل ساعة"],[120,"قبل ساعتين"]].map(([v,l])=>`<option value="${v}" ${+f.remind===v?"selected":""}>${l}</option>`).join("")}</select></div>
@@ -860,6 +863,7 @@ document.addEventListener("click", e=>{
   }[a]||(()=>{}))();
 });
 document.addEventListener("change", e=>{
+  if(form && (e.target.name==="start"||e.target.name==="end")){ form._overnightOk = false; const w = document.getElementById("timeWarn"); if(w) w.textContent = ""; }
   if(e.target.name==="rec" && form){ readForm(); drawTaskModal(); }
 });
 document.addEventListener("input", e=>{
@@ -871,6 +875,13 @@ document.addEventListener("submit", e=>{
   if(e.target.id==="taskForm"){
     readForm();
     if(!form.title.trim()) return;
+    const toM = s => { const [a,b] = s.split(":").map(Number); return a*60+b; };
+    if(form.start && form.end && toM(form.end) <= toM(form.start) && !form._overnightOk){
+      form._overnightOk = true;
+      document.getElementById("timeWarn").innerHTML = `⚠️ وقت النهاية (${fmtTime(form.end)}) قبل وقت البداية. إذا قصدت الظهر اختر <b>12:00 م</b>. وإذا كانت المهمة فعلاً تمتد لبعد منتصف الليل اضغط حفظ مرة ثانية.`;
+      return;
+    }
+    delete form._overnightOk;
     if(form.rec==="weekly" && (!form.days||!form.days.length)) form.days = [parse(form.date).getDay()];
     if(form.rec==="none") delete form.until;
     const i = S.tasks.findIndex(x=>x.id===form.id);
